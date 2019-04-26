@@ -164,17 +164,11 @@ class Consul
         });
         //Leader监听
         if (!empty($consulConfig->getLeaderName())) {
-            //获取checkIDs
-            $checks = ["serfHealth"];
-            foreach ($this->consulConfig->getServiceConfigs() as $serviceConfig) {
-                $checks[] = "service:" . $serviceConfig->getId() ?? $serviceConfig->getName();
-            }
             //获取SessionId
             $this->sessionId = $this->session->create(
                 [
                     'LockDelay' => 0,
                     'Behavior' => 'release',
-                    'Checks' => $checks,
                     'Name' => $this->consulConfig->getLeaderName()
                 ])->json()['ID'];
             goWithContext(function () {
@@ -302,4 +296,14 @@ class Consul
         }
     }
 
+    /**
+     * 释放Leader
+     */
+    public function releaseLeader()
+    {
+        if (!empty($this->sessionId)) {
+            $this->debug("释放session：$this->sessionId");
+            $this->session->destroy($this->sessionId);
+        }
+    }
 }

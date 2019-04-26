@@ -18,7 +18,8 @@ $httpPortConfig->setOpenHttpProtocol(true);
 
 //---服务器配置---
 $serverConfig = new ServerConfig();
-$serverConfig->setWorkerNum(4);
+$serverConfig->setReloadAsync(true);
+$serverConfig->setWorkerNum(1);
 $serverConfig->setRootDir(__DIR__ . "/../");
 
 $server = new DefaultServer($serverConfig);

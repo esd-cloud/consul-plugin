@@ -8,6 +8,7 @@
 
 namespace GoSwoole\Plugins\Consul;
 
+use GoSwoole\BaseServer\Plugins\Event\ProcessEvent;
 use GoSwoole\BaseServer\Plugins\Logger\GetLogger;
 use GoSwoole\BaseServer\Server\Context;
 use GoSwoole\BaseServer\Server\Plugin\AbstractPlugin;
@@ -29,6 +30,11 @@ class ConsulPlugin extends AbstractPlugin
      * @var ConsulConfig
      */
     private $consulConfig;
+
+    /**
+     * @var Consul
+     */
+    private $consul;
 
     /**
      * ConsulPlugin constructor.
@@ -89,9 +95,6 @@ class ConsulPlugin extends AbstractPlugin
      */
     public function beforeProcessStart(Context $context)
     {
-        if ($context->getServer()->getProcessManager()->getCurrentProcess()->getProcessName() === self::processName) {
-            new Consul($this->consulConfig);
-        }
         //每个进程监听Leader变更
         goWithContext(function () {
             $channel = Server::$instance->getEventDispatcher()->listen(ConsulLeaderChangeEvent::ConsulLeaderChangeEvent);
@@ -103,6 +106,7 @@ class ConsulPlugin extends AbstractPlugin
                 }
             }
         });
+
         //每个进程监听Service变更
         goWithContext(function () {
             $channel = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent);
@@ -114,6 +118,20 @@ class ConsulPlugin extends AbstractPlugin
                 }
             }
         });
+
+        //Helper进程
+        if ($context->getServer()->getProcessManager()->getCurrentProcess()->getProcessName() === self::processName) {
+            $this->consul = new Consul($this->consulConfig);
+            //进程监听关服信息
+            goWithContext(function () {
+                $channel = Server::$instance->getEventDispatcher()->listen(ProcessEvent::ProcessStopEvent, null, true);
+                $event = $channel->pop();
+                if ($event instanceof ProcessEvent) {
+                    //释放leader
+                    $this->consul->releaseLeader();
+                }
+            });
+        }
         $this->ready();
     }
 }
