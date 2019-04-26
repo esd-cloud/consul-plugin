@@ -164,11 +164,17 @@ class Consul
         });
         //Leader监听
         if (!empty($consulConfig->getLeaderName())) {
+            //获取checkIDs
+            $checks = ["serfHealth"];
+            foreach ($this->consulConfig->getServiceConfigs() as $serviceConfig) {
+                $checks[] = "service:" . $serviceConfig->getId();
+            }
             //获取SessionId
             $this->sessionId = $this->session->create(
                 [
                     'LockDelay' => 0,
                     'Behavior' => 'release',
+                   // 'Checks' => $checks,
                     'Name' => $this->consulConfig->getLeaderName()
                 ])->json()['ID'];
             goWithContext(function () {
