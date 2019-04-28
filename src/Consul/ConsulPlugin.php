@@ -128,6 +128,8 @@ class ConsulPlugin extends AbstractPlugin
                 $channel->pop();
                 //同步请求释放leader，关服操作无法使用协程
                 $this->consul->releaseLeader(false);
+                //同步请求注销service
+                $this->consul->deregisterService(false);
             });
         }
         $this->ready();

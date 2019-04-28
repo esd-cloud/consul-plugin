@@ -41,6 +41,7 @@ class ConsulPort extends ServerPort
     public function onHttpRequest(Request $request, Response $response)
     {
         print_r(Services::getServices("user"));
+        return "OK";
     }
 
     public function onWsMessage(WebSocketFrame $frame)

@@ -77,6 +77,21 @@ class Consul
      * @var Health
      */
     private $health;
+    /**
+     * 同步
+     * @var \SensioLabs\Consul\ServiceFactory
+     */
+    private $syncSf;
+    /**
+     * 同步Session
+     * @var SessionInterface
+     */
+    private $syncSession;
+    /**
+     * 同步Agent
+     * @var AgentInterface
+     */
+    private $syncAgent;
 
     /**
      * Consul constructor.
@@ -143,6 +158,11 @@ class Consul
         $this->kv = $this->sf->get(KVInterface::class);
         $this->agent = $this->sf->get(AgentInterface::class);
         $this->health = $this->sf->get(HealthInterface::class);
+
+        $this->syncSf = new \SensioLabs\Consul\ServiceFactory(["base_uri" => $this->consulConfig->getHost(), "http_errors" => false], Server::$instance->getLog());
+        $this->syncSession = $this->syncSf->get(SessionInterface::class);
+        $this->syncAgent = $this->sf->get(AgentInterface::class);
+
         foreach ($this->consulConfig->getServiceConfigs() as $consulServiceConfig) {
             $body = $consulServiceConfig->buildConfig();
             $this->agent->registerService($body);
@@ -164,13 +184,6 @@ class Consul
         });
         //Leader监听
         if (!empty($consulConfig->getLeaderName())) {
-            //获取SessionId
-            $this->sessionId = $this->session->create(
-                [
-                    'LockDelay' => 0,
-                    'Behavior' => 'release',
-                    'Name' => $this->consulConfig->getLeaderName()
-                ])->json()['ID'];
             goWithContext(function () {
                 //先尝试获取下leader
                 $this->getLeader();
@@ -227,18 +240,29 @@ class Consul
      */
     private function getLeader()
     {
+        if ($this->sessionId != null) {
+            $this->session->destroy($this->sessionId);
+        }
         try {
+            //获取SessionId
+            $this->sessionId = $this->session->create(
+                [
+                    'LockDelay' => 0,
+                    'Behavior' => 'release',
+                    'Name' => $this->consulConfig->getLeaderName()
+                ])->json()['ID'];
             $lockAcquired = $this->kv->put("{$this->consulConfig->getLeaderName()}/leader", 'a value', ['acquire' => $this->sessionId])->json();
             if (false === $lockAcquired) {
                 $this->setIsLeader(false);
                 //监控Leader
                 $this->debug("没有获取到Leader");
-                $this->monitorLeader(0);
             } else {
                 //获取到了
                 $this->debug("获取到Leader");
                 $this->setIsLeader(true);
             }
+            //监控Leader
+            $this->monitorLeader(0);
         } catch (\Throwable $e) {
             $this->error($e);
             $this->getLeader();
@@ -267,7 +291,10 @@ class Consul
                 $this->debug("目前集群没有Leader");
                 $this->getLeader();
             } else {
-                $this->debug("目前集群存在Leader，监控Leader变化");
+                if ($session != $this->sessionId) {
+                    $this->debug("目前集群存在Leader，监控Leader变化");
+                    $this->setIsLeader(false);
+                }
                 $this->monitorLeader($index);
             }
         }
@@ -309,9 +336,24 @@ class Consul
                 $this->session->destroy($this->sessionId);
             } else {
                 //注意这里需要用同步请求，因为关服无法使用协程方案
-                $sf = new \SensioLabs\Consul\ServiceFactory(["base_uri" => $this->consulConfig->getHost(), "http_errors" => false], Server::$instance->getLog());
-                $session = $sf->get(SessionInterface::class);
-                $session->destroy($this->sessionId);
+                $this->syncSession->destroy($this->sessionId);
+            }
+        }
+    }
+
+    /**
+     * 注销服务
+     * @param bool $useAsync
+     */
+    public function deregisterService($useAsync = true)
+    {
+        foreach ($this->consulConfig->getServiceConfigs() as $serviceConfig) {
+            $serviceId = $serviceConfig->getId() ?? $serviceConfig->getName();
+            $this->debug("注销Service：$serviceId");
+            if ($useAsync) {
+                $this->agent->deregisterService($serviceId);
+            } else {
+                $this->syncAgent->deregisterService($serviceId);
             }
         }
     }

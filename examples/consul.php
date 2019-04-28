@@ -3,6 +3,8 @@
 use GoSwoole\BaseServer\ExampleClass\Server\DefaultServer;
 use GoSwoole\BaseServer\Server\Config\PortConfig;
 use GoSwoole\BaseServer\Server\Config\ServerConfig;
+use GoSwoole\Plugins\Aop\AopConfig;
+use GoSwoole\Plugins\Aop\AopPlugin;
 use GoSwoole\Plugins\Consul\Config\ConsulConfig;
 use GoSwoole\Plugins\Consul\ConsulPlugin;
 use GoSwoole\Plugins\Consul\ExampleClass\ConsulPort;
@@ -24,11 +26,12 @@ $serverConfig->setRootDir(__DIR__ . "/../");
 
 $server = new DefaultServer($serverConfig);
 //添加端口
-$server->addPort("http", $httpPortConfig);
+$server->addPort("http", $httpPortConfig,ConsulPort::class);
 //添加插件
 $consulConfig = new ConsulConfig("http://192.168.1.200:8500");
 $consulConfig->setLeaderName("Test");
 $server->getPlugManager()->addPlug(new ConsulPlugin($consulConfig));
+$server->getPlugManager()->addPlug(new AopPlugin(new AopConfig(__DIR__ . "/../exampleClass")));
 $server->addProcess("test1");
 //配置
 $server->configure();
