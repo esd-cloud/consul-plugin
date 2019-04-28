@@ -28,7 +28,7 @@ $server->addPort("http", $httpPortConfig);
 $consulConfig = new ConsulConfig("http://192.168.1.200:8500");
 $consulConfig->setLeaderName("Test");
 $server->getPlugManager()->addPlug(new ConsulPlugin($consulConfig));
-
+$server->addProcess("test1");
 //配置
 $server->configure();
 //configure后可以获取实例

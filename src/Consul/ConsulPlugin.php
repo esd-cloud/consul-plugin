@@ -91,7 +91,6 @@ class ConsulPlugin extends AbstractPlugin
      * 在进程启动前
      * @param Context $context
      * @return mixed
-     * @throws \GoSwoole\BaseServer\Server\Exception\ConfigException
      */
     public function beforeProcessStart(Context $context)
     {
@@ -101,7 +100,8 @@ class ConsulPlugin extends AbstractPlugin
             while (true) {
                 $event = $channel->pop();
                 if ($event instanceof ConsulLeaderChangeEvent) {
-                    $this->debug("收到Leader变更事件：{$event->isLeader()}");
+                    $leaderStatus = $event->isLeader() ? "true" : "false";
+                    $this->debug("收到Leader变更事件：$leaderStatus");
                     Leader::$isLeader = $event->isLeader();
                 }
             }
@@ -121,15 +121,13 @@ class ConsulPlugin extends AbstractPlugin
 
         //Helper进程
         if ($context->getServer()->getProcessManager()->getCurrentProcess()->getProcessName() === self::processName) {
-            $this->consul = new Consul($this->consulConfig);
-            //进程监听关服信息
             goWithContext(function () {
+                $this->consul = new Consul($this->consulConfig);
+                //进程监听关服信息
                 $channel = Server::$instance->getEventDispatcher()->listen(ProcessEvent::ProcessStopEvent, null, true);
-                $event = $channel->pop();
-                if ($event instanceof ProcessEvent) {
-                    //释放leader
-                    $this->consul->releaseLeader();
-                }
+                $channel->pop();
+                //同步请求释放leader，关服操作无法使用协程
+                $this->consul->releaseLeader(false);
             });
         }
         $this->ready();

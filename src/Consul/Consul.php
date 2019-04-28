@@ -164,6 +164,7 @@ class Consul
         });
         //Leader监听
         if (!empty($consulConfig->getLeaderName())) {
+            $this->warn("请注意使用leader功能服务必选正常结束，不然无法释放session");
             //获取checkIDs
             $checks = ["serfHealth"];
             foreach ($this->consulConfig->getServiceConfigs() as $serviceConfig) {
@@ -174,7 +175,7 @@ class Consul
                 [
                     'LockDelay' => 0,
                     'Behavior' => 'release',
-                   // 'Checks' => $checks,
+                    // 'Checks' => $checks,
                     'Name' => $this->consulConfig->getLeaderName()
                 ])->json()['ID'];
             goWithContext(function () {
@@ -304,12 +305,21 @@ class Consul
 
     /**
      * 释放Leader
+     * @param bool $useAsync
      */
-    public function releaseLeader()
+    public function releaseLeader($useAsync = true)
     {
         if (!empty($this->sessionId)) {
             $this->debug("释放session：$this->sessionId");
-            $this->session->destroy($this->sessionId);
+            if($useAsync){
+                //异步
+                $this->session->destroy($this->sessionId);
+            }else {
+                //注意这里需要用同步请求，因为关服无法使用协程方案
+                $sf = new \SensioLabs\Consul\ServiceFactory(["base_uri" => $this->consulConfig->getHost(), "http_errors" => false], Server::$instance->getLog());
+                $session = $sf->get(SessionInterface::class);
+                $session->destroy($this->sessionId);
+            }
         }
     }
 }
