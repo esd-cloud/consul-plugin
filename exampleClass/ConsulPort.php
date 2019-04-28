@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: administrato
+ * User: 白猫
  * Date: 2019/4/28
  * Time: 11:59
  */
@@ -40,8 +40,8 @@ class ConsulPort extends ServerPort
 
     public function onHttpRequest(Request $request, Response $response)
     {
-        print_r(Services::getServices("user"));
-        return "OK";
+        print_r(Services::getServices("test"));
+        $response->end("OK");
     }
 
     public function onWsMessage(WebSocketFrame $frame)

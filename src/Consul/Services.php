@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: administrato
+ * User: 白猫
  * Date: 2019/4/26
  * Time: 17:00
  */
@@ -12,7 +12,6 @@ namespace GoSwoole\Plugins\Consul;
 use GoSwoole\BaseServer\Server\Server;
 use GoSwoole\Plugins\Consul\Beans\ConsulServiceInfo;
 use GoSwoole\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
-use GoSwoole\Plugins\Consul\Event\ConsulGetServiceEvent;
 use GoSwoole\Plugins\Consul\Event\ConsulServiceChangeEvent;
 
 /**
@@ -37,7 +36,7 @@ class Services
             = $consulServiceChangeEvent->getConsulServiceListInfo()->getConsulServiceInfos();
         //同时本进程触发更为细化的携带服务名的ConsulServiceChangeEvent事件
         $consulServiceChangeEvent->setType(
-            ConsulServiceChangeEvent::ConsulServiceChangeEvent."::".$consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName());
+            ConsulServiceChangeEvent::ConsulServiceChangeEvent . "::" . $consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName());
         Server::$instance->getEventDispatcher()->dispatchEvent($consulServiceChangeEvent);
     }
 
