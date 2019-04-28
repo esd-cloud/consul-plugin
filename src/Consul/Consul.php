@@ -164,7 +164,6 @@ class Consul
         });
         //Leader监听
         if (!empty($consulConfig->getLeaderName())) {
-            $this->warn("请注意使用leader功能服务必选正常结束，不然无法释放session");
             //获取checkIDs
             $checks = ["serfHealth"];
             foreach ($this->consulConfig->getServiceConfigs() as $serviceConfig) {
