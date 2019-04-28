@@ -5,6 +5,7 @@ use GoSwoole\BaseServer\Server\Config\PortConfig;
 use GoSwoole\BaseServer\Server\Config\ServerConfig;
 use GoSwoole\Plugins\Consul\Config\ConsulConfig;
 use GoSwoole\Plugins\Consul\ConsulPlugin;
+use GoSwoole\Plugins\Consul\ExampleClass\ConsulPort;
 
 require __DIR__ . '/../vendor/autoload.php';
 

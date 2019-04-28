@@ -16,9 +16,9 @@ class ConsulServiceChangeEvent extends Event
 {
     const ConsulServiceChangeEvent = "ConsulServiceChangeEvent";
 
-    public function __construct(string $type, ConsulServiceListInfo $consulServiceListInfo)
+    public function __construct(ConsulServiceListInfo $consulServiceListInfo)
     {
-        parent::__construct($type, $consulServiceListInfo);
+        parent::__construct(self::ConsulServiceChangeEvent, $consulServiceListInfo);
     }
 
     /**

@@ -6,7 +6,8 @@
   },
   "autoload": {
     "psr-4": {
-      "GoSwoole\\Plugins\\": "src/"
+      "GoSwoole\\Plugins\\": "src/",
+      "GoSwoole\\Plugins\\Consul\\ExampleClass\\": "exampleClass/"
     }
   },
   "authors": [

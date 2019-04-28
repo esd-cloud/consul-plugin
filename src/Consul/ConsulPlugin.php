@@ -114,7 +114,7 @@ class ConsulPlugin extends AbstractPlugin
                 $event = $channel->pop();
                 if ($event instanceof ConsulServiceChangeEvent) {
                     $this->debug("收到Service变更事件：{$event->getConsulServiceListInfo()->getServiceName()}");
-                    Services::modifyServices($event->getConsulServiceListInfo());
+                    Services::modifyServices($event);
                 }
             }
         });

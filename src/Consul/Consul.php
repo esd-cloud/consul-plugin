@@ -164,17 +164,11 @@ class Consul
         });
         //Leader监听
         if (!empty($consulConfig->getLeaderName())) {
-            //获取checkIDs
-            $checks = ["serfHealth"];
-            foreach ($this->consulConfig->getServiceConfigs() as $serviceConfig) {
-                $checks[] = "service:" . $serviceConfig->getId();
-            }
             //获取SessionId
             $this->sessionId = $this->session->create(
                 [
                     'LockDelay' => 0,
                     'Behavior' => 'release',
-                    // 'Checks' => $checks,
                     'Name' => $this->consulConfig->getLeaderName()
                 ])->json()['ID'];
             goWithContext(function () {
@@ -204,7 +198,7 @@ class Consul
     private function monitorService(string $service, int $index)
     {
         try {
-            $response = $this->health->service($service, ["passing" => true], ["index" => $index, "wait" => "1m"], 120);
+            $response = $this->health->service($service, ["passing" => true, "index" => $index, "wait" => "1m"], 120);
         } catch (\Throwable $e) {
             //出错会一直重试
             $this->error($e);
@@ -215,13 +209,13 @@ class Consul
             $index = $response->getHeaders()["x-consul-index"][0];
             $consulServiceInfos = [];
             foreach ($response->json() as $one) {
-                $service = $one['Service'];
-                $consulServiceInfo = new ConsulServiceInfo($service['Service'], $service['ID'], $service['Address'], $service['Port'], $service['Meta']);
+                $oneService = $one['Service'];
+                $consulServiceInfo = new ConsulServiceInfo($oneService['Service'], $oneService['ID'], $oneService['Address'], $oneService['Port'], $oneService['Meta']);
                 $consulServiceInfos[] = $consulServiceInfo;
             }
             //广播
             Server::$instance->getEventDispatcher()->dispatchProcessEvent(
-                new ConsulServiceChangeEvent(ConsulServiceChangeEvent::ConsulServiceChangeEvent, new ConsulServiceListInfo($service, $consulServiceInfos)),
+                new ConsulServiceChangeEvent(new ConsulServiceListInfo($service, $consulServiceInfos)),
                 ... Server::$instance->getProcessManager()->getProcesses()
             );
             $this->monitorService($service, $index);
@@ -296,7 +290,7 @@ class Consul
             $this->isLeader = $isLeader;
             //广播
             Server::$instance->getEventDispatcher()->dispatchProcessEvent(
-                new ConsulLeaderChangeEvent(ConsulLeaderChangeEvent::ConsulLeaderChangeEvent, $isLeader),
+                new ConsulLeaderChangeEvent($isLeader),
                 ... Server::$instance->getProcessManager()->getProcesses()
             );
         }
@@ -310,10 +304,10 @@ class Consul
     {
         if (!empty($this->sessionId)) {
             $this->debug("释放session：$this->sessionId");
-            if($useAsync){
+            if ($useAsync) {
                 //异步
                 $this->session->destroy($this->sessionId);
-            }else {
+            } else {
                 //注意这里需要用同步请求，因为关服无法使用协程方案
                 $sf = new \SensioLabs\Consul\ServiceFactory(["base_uri" => $this->consulConfig->getHost(), "http_errors" => false], Server::$instance->getLog());
                 $session = $sf->get(SessionInterface::class);

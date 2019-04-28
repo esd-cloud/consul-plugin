@@ -9,9 +9,17 @@
 namespace GoSwoole\Plugins\Consul;
 
 
+use GoSwoole\BaseServer\Server\Server;
 use GoSwoole\Plugins\Consul\Beans\ConsulServiceInfo;
-use GoSwoole\Plugins\Consul\Beans\ConsulServiceListInfo;
+use GoSwoole\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
+use GoSwoole\Plugins\Consul\Event\ConsulGetServiceEvent;
+use GoSwoole\Plugins\Consul\Event\ConsulServiceChangeEvent;
 
+/**
+ * 通过这个类获取服务
+ * Class Services
+ * @package GoSwoole\Plugins\Consul
+ */
 class Services
 {
     /**
@@ -20,15 +28,39 @@ class Services
     private static $services = [];
 
     /**
-     * @param ConsulServiceListInfo $consulServiceListInfo
+     * 服务变更
+     * @param ConsulServiceChangeEvent $consulServiceChangeEvent
      */
-    public static function modifyServices(ConsulServiceListInfo $consulServiceListInfo)
+    public static function modifyServices(ConsulServiceChangeEvent $consulServiceChangeEvent)
     {
-        self::$services[$consulServiceListInfo->getServiceName()] = $consulServiceListInfo->getConsulServiceInfos();
+        self::$services[$consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName()]
+            = $consulServiceChangeEvent->getConsulServiceListInfo()->getConsulServiceInfos();
+        //同时本进程触发更为细化的携带服务名的ConsulServiceChangeEvent事件
+        $consulServiceChangeEvent->setType(
+            ConsulServiceChangeEvent::ConsulServiceChangeEvent."::".$consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName());
+        Server::$instance->getEventDispatcher()->dispatchEvent($consulServiceChangeEvent);
     }
 
-    public static function getServices(string $service)
+    /**
+     * 获取服务
+     * @param string $service
+     * @return ConsulServiceInfo[]
+     */
+    public static function getServices(string $service): array
     {
-        return self::$services[$service] ?? null;
+        $consulServiceInfos = self::$services[$service] ?? null;
+        //为null只有二种情况，一是第一次获取，二是reload后进程数据丢失，这时重新获取
+        if ($consulServiceInfos == null) {
+            Server::$instance->getEventDispatcher()->dispatchProcessEvent(
+                new ConsulAddServiceMonitorEvent($service),
+                Server::$instance->getProcessManager()->getProcessFromName(ConsulPlugin::processName)
+            );
+            $channel = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent . "::" . $service, null, true);
+            $consulGetServiceEvent = $channel->pop();
+            if ($consulGetServiceEvent instanceof ConsulServiceChangeEvent) {
+                $consulServiceInfos = $consulGetServiceEvent->getConsulServiceListInfo()->getConsulServiceInfos();
+            }
+        }
+        return $consulServiceInfos;
     }
 }

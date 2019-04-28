@@ -15,9 +15,9 @@ class ConsulAddServiceMonitorEvent extends Event
 {
     const ConsulAddServiceMonitorEvent = "ConsulAddServiceMonitorEvent";
 
-    public function __construct(string $type, string $service)
+    public function __construct(string $service)
     {
-        parent::__construct($type, $service);
+        parent::__construct(self::ConsulAddServiceMonitorEvent, $service);
     }
 
     /**

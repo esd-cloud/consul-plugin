@@ -8,7 +8,11 @@
 
 namespace GoSwoole\Plugins\Consul;
 
-
+/**
+ * 通过这个类判断是否是leader
+ * Class Leader
+ * @package GoSwoole\Plugins\Consul
+ */
 class Leader
 {
     public static $isLeader;

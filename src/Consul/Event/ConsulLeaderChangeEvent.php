@@ -15,9 +15,9 @@ class ConsulLeaderChangeEvent extends Event
 {
     const ConsulLeaderChangeEvent = "ConsulLeaderChangeEvent";
 
-    public function __construct(string $type, bool $isLeader)
+    public function __construct(bool $isLeader)
     {
-        parent::__construct($type, $isLeader);
+        parent::__construct(self::ConsulLeaderChangeEvent, $isLeader);
     }
 
     public function isLeader(): bool
