@@ -165,6 +165,8 @@ class Consul
 
         foreach ($this->consulConfig->getServiceConfigs() as $consulServiceConfig) {
             $body = $consulServiceConfig->buildConfig();
+            $serviceId = $consulServiceConfig->getId() ?? $consulServiceConfig->getName();
+            $this->debug("注册Service：$serviceId");
             $this->agent->registerService($body);
         }
         //监听需要监控的服务的事件
@@ -241,6 +243,7 @@ class Consul
     private function getLeader()
     {
         if ($this->sessionId != null) {
+            $this->debug("释放session：$this->sessionId");
             $this->session->destroy($this->sessionId);
         }
         try {
@@ -251,6 +254,7 @@ class Consul
                     'Behavior' => 'release',
                     'Name' => $this->consulConfig->getLeaderName()
                 ])->json()['ID'];
+            $this->debug("获取SessionId：$this->sessionId");
             $lockAcquired = $this->kv->put("{$this->consulConfig->getLeaderName()}/leader", 'a value', ['acquire' => $this->sessionId])->json();
             if (false === $lockAcquired) {
                 $this->setIsLeader(false);
@@ -338,6 +342,7 @@ class Consul
                 //注意这里需要用同步请求，因为关服无法使用协程方案
                 $this->syncSession->destroy($this->sessionId);
             }
+            $this->setIsLeader(false);
         }
     }
 
