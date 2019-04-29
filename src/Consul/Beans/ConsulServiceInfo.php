@@ -33,13 +33,19 @@ class ConsulServiceInfo
      */
     private $serviceMeta;
 
-    public function __construct($serviceName, $serviceId, $serviceAddress, $servicePort, $serviceMeta)
+    /**
+     * @var null|string[]
+     */
+    private $serviceTags;
+
+    public function __construct($serviceName, $serviceId, $serviceAddress, $servicePort, $serviceMeta, $serviceTags)
     {
         $this->serviceName = $serviceName;
         $this->serviceId = $serviceId;
         $this->serviceAddress = $serviceAddress;
         $this->servicePort = $servicePort;
         $this->serviceMeta = $serviceMeta;
+        $this->serviceTags = $serviceTags;
     }
 
     /**
@@ -120,5 +126,23 @@ class ConsulServiceInfo
     public function setServiceId(string $serviceId): void
     {
         $this->serviceId = $serviceId;
+    }
+
+    /**
+     * @param string[]|null $serviceTags
+     * @return ConsulServiceInfo
+     */
+    public function setServiceTags(?array $serviceTags): ConsulServiceInfo
+    {
+        $this->serviceTags = $serviceTags;
+        return $this;
+    }
+
+    /**
+     * @return string[]|null
+     */
+    public function getServiceTags(): ?array
+    {
+        return $this->serviceTags;
     }
 }

@@ -225,7 +225,7 @@ class Consul
             $consulServiceInfos = [];
             foreach ($response->json() as $one) {
                 $oneService = $one['Service'];
-                $consulServiceInfo = new ConsulServiceInfo($oneService['Service'], $oneService['ID'], $oneService['Address'], $oneService['Port'], $oneService['Meta']);
+                $consulServiceInfo = new ConsulServiceInfo($oneService['Service'], $oneService['ID'], $oneService['Address'], $oneService['Port'], $oneService['Meta'], $oneService['Tags']);
                 $consulServiceInfos[] = $consulServiceInfo;
             }
             //广播

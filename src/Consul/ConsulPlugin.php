@@ -134,4 +134,12 @@ class ConsulPlugin extends AbstractPlugin
         }
         $this->ready();
     }
+
+    /**
+     * @return ConsulConfig
+     */
+    public function getConsulConfig(): ConsulConfig
+    {
+        return $this->consulConfig;
+    }
 }

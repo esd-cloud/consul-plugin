@@ -60,6 +60,26 @@ class Services
                 $consulServiceInfos = $consulGetServiceEvent->getConsulServiceListInfo()->getConsulServiceInfos();
             }
         }
+        $consulPlugin = Server::$instance->getPlugManager()->getPlug(ConsulPlugin::class);
+        if ($consulPlugin instanceof ConsulPlugin) {
+            $consulConfig = $consulPlugin->getConsulConfig();
+            $serverListQueryTags = $consulConfig->getServerListQueryTags();
+            $tag = null;
+            if ($serverListQueryTags != null) {
+                $tag = $serverListQueryTags[$service] ?? $consulConfig->getDefaultQueryTag();
+            }
+            if ($tag != null) {
+                foreach ($consulServiceInfos as $key => $value) {
+                    if (empty($value->getServiceTags())) {
+                        unset($consulServiceInfos[$key]);
+                    } else {
+                        if (!in_array($tag, $value->getServiceTags())) {
+                            unset($consulServiceInfos[$key]);
+                        }
+                    }
+                }
+            }
+        }
         return $consulServiceInfos;
     }
 }
