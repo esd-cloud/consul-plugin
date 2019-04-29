@@ -1,8 +1,8 @@
 {
   "require": {
-    "go-swoole/base-server": "^0.1",
-    "go-swoole/consul": "^0.1",
-    "go-swoole/actuator-plugin": "^0.1"
+    "go-swoole/base-server": "~0.1",
+    "go-swoole/consul": "~0.1",
+    "go-swoole/actuator-plugin": "~0.1"
   },
   "autoload": {
     "psr-4": {
