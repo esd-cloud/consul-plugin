@@ -8,61 +8,140 @@
 
 namespace GoSwoole\Plugins\Consul\Config;
 
+use GoSwoole\BaseServer\Plugins\Config\BaseConfig;
+use GoSwoole\BaseServer\Server\Config\PortConfig;
+use GoSwoole\BaseServer\Server\Exception\ConfigException;
+use GoSwoole\BaseServer\Server\Server;
+
 /**
  * Class ConsulConfig
  * @package GoSwoole\Plugins\Consul\Config
  */
-class ConsulConfig
+class ConsulConfig extends BaseConfig
 {
+    const key = "consul";
     /**
      * ip地址和端口默认为http://127.0.0.1:8500
      * @var string
      */
-    private $host = "http://127.0.0.1:8500";
+    protected $host = "http://127.0.0.1:8500";
 
     /**
      * @var ConsulServiceConfig[]|null
      */
-    private $serviceConfigs;
+    protected $serviceConfigs;
 
     /**
      * 默认注册的tags将覆盖ConsulServiceConfig中的tags配置
      * @var string[]|null
      */
-    private $defaultTags;
+    protected $defaultTags;
 
     /**
      * 默认查询服务的tag
      * @var string|null
      */
-    private $defaultQueryTag;
+    protected $defaultQueryTag;
 
     /**
      * 查询服务的tag对照表
      * @var string[]|null
      */
-    private $serverListQueryTags;
+    protected $serverListQueryTags;
 
     /**
      * 本机网卡设备
      * @var string
      */
-    private $bindNetDev = "eth0";
+    protected $bindNetDev = "eth0";
 
     /**
      * 领导名称
      * @var string|null
      */
-    private $leaderName;
+    protected $leaderName;
 
     /**
      * ConsulConfig constructor.
      * @param string $host
+     * @throws \ReflectionException
      */
     public function __construct(?string $host)
     {
+        parent::__construct(self::key);
         if ($host != null) {
             $this->host = $host;
+        }
+    }
+
+    /**
+     * 获取ip
+     * @param $dev
+     * @return string
+     */
+    private function getServerIp($dev)
+    {
+        return "127.0.0.1";
+        //return exec("ip -4 addr show $dev | grep inet | awk '{print $2}' | cut -d / -f 1");
+    }
+
+    /**
+     * 自动配置
+     * @throws ConfigException
+     * @throws \ReflectionException
+     */
+    public function autoConfig()
+    {
+        $serverConfig = Server::$instance->getServerConfig();
+        $normalName = $serverConfig->getName();
+        $ip = $this->getServerIp($this->getBindNetDev());
+        if (empty($this->getServiceConfigs())) {
+            //如果没有配置ServiceConfigs那么将自动填充配置
+            foreach (Server::$instance->getPortManager()->getPortConfigs() as $portConfig) {
+                $agreement = "http";
+                if ($portConfig->isOpenHttpProtocol()) {
+                    $agreement = "http";
+                    if ($portConfig->isEnableSsl()) {
+                        $agreement = "https";
+                    }
+                } elseif ($portConfig->isOpenWebsocketProtocol()) {
+                    $agreement = "ws";
+                    if ($portConfig->isEnableSsl()) {
+                        $agreement = "wss";
+                    }
+                } elseif ($portConfig->getSockType() == PortConfig::SWOOLE_SOCK_TCP || $portConfig->getSockType() == PortConfig::SWOOLE_SOCK_TCP6) {
+                    $agreement = "tcp";
+                }
+                $consulServiceConfig = new ConsulServiceConfig();
+                $consulServiceConfig->setName($normalName);
+                $consulServiceConfig->setId($normalName . "-" . $ip . "-" . $portConfig->getPort());
+                $consulServiceConfig->setAddress($ip);
+                $consulServiceConfig->setPort($portConfig->getPort());
+                $consulServiceConfig->setMeta(["server" => "go-swoole", "agreement" => $agreement]);
+                $consulCheckConfig = new ConsulCheckConfig();
+                $consulCheckConfig->setInterval("10s");
+                $consulCheckConfig->setTlsSkipVerify(true);
+                $consulCheckConfig->setNotes("go-swoole auto check");
+                $consulCheckConfig->setStatus("passing");
+                $consulServiceConfig->setCheckConfig($consulCheckConfig);
+                if ($portConfig->isOpenHttpProtocol() || $portConfig->isOpenWebsocketProtocol()) {
+                    $consulCheckConfig->setHttp("$agreement://$ip:{$portConfig->getPort()}/actuator/health");
+                    $this->addServiceConfig($consulServiceConfig);
+                } elseif ($agreement == "tcp") {
+                    $consulCheckConfig = new ConsulCheckConfig();
+                    $consulCheckConfig->setTcp("$agreement://$ip:{$portConfig->getPort()}");
+                    $this->addServiceConfig($consulServiceConfig);
+                }
+            }
+        }
+        //修改全局的配置
+        foreach ($this->getServiceConfigs() as $consulServiceConfig) {
+            if (empty($consulServiceConfig->getName())) {
+                throw new ConfigException("ConsulServiceConfig缺少name字段");
+            }
+            if (!empty($this->getDefaultTags())) {
+                $consulServiceConfig->setTags($this->getDefaultTags());
+            }
         }
     }
 
@@ -85,7 +164,7 @@ class ConsulConfig
     public function addServiceConfig(ConsulServiceConfig $consulServiceConfig)
     {
         if ($this->serviceConfigs == null) $this->serviceConfigs = [];
-        $this->serviceConfigs[] = $consulServiceConfig;
+        $this->serviceConfigs[$consulServiceConfig->getName()] = $consulServiceConfig;
     }
 
     /**
@@ -98,10 +177,23 @@ class ConsulConfig
 
     /**
      * @param ConsulServiceConfig[]|null $serviceConfigs
+     * @throws \ReflectionException
      */
     public function setServiceConfigs(?array $serviceConfigs): void
     {
-        $this->serviceConfigs = $serviceConfigs;
+        if (empty($serviceConfigs)) {
+            $this->serviceConfigs = $serviceConfigs;
+        } else {
+            foreach ($serviceConfigs as $key => $value) {
+                if (is_array($value)) {
+                    $this->serviceConfigs[$key] = new ConsulServiceConfig();
+                    $this->serviceConfigs[$key]->setName($key);
+                    $this->serviceConfigs[$key]->buildFromConfig($value);
+                } else if ($value instanceof ConsulServiceConfig) {
+                    $this->serviceConfigs[$key] = $value;
+                }
+            }
+        }
     }
 
     /**

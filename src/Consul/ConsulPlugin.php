@@ -8,9 +8,11 @@
 
 namespace GoSwoole\Plugins\Consul;
 
+use GoSwoole\BaseServer\Exception;
 use GoSwoole\BaseServer\Plugins\Event\ProcessEvent;
 use GoSwoole\BaseServer\Plugins\Logger\GetLogger;
 use GoSwoole\BaseServer\Server\Context;
+use GoSwoole\BaseServer\Server\Exception\ConfigException;
 use GoSwoole\BaseServer\Server\Plugin\AbstractPlugin;
 use GoSwoole\BaseServer\Server\Plugin\PluginInterfaceManager;
 use GoSwoole\BaseServer\Server\Server;
@@ -39,6 +41,7 @@ class ConsulPlugin extends AbstractPlugin
     /**
      * ConsulPlugin constructor.
      * @param ConsulConfig $consulConfig
+     * @throws \ReflectionException
      */
     public function __construct(ConsulConfig $consulConfig = null)
     {
@@ -54,7 +57,7 @@ class ConsulPlugin extends AbstractPlugin
     /**
      * @param PluginInterfaceManager $pluginInterfaceManager
      * @return mixed|void
-     * @throws \GoSwoole\BaseServer\Exception
+     * @throws Exception
      */
     public function onAdded(PluginInterfaceManager $pluginInterfaceManager)
     {
@@ -79,12 +82,16 @@ class ConsulPlugin extends AbstractPlugin
      * 在服务启动前
      * @param Context $context
      * @return mixed
-     * @throws \GoSwoole\BaseServer\Server\Exception\ConfigException
+     * @throws ConfigException
+     * @throws \ReflectionException
      */
     public function beforeServerStart(Context $context)
     {
         //添加一个helper进程
         $context->getServer()->addProcess(self::processName, HelperConsulProcess::class, self::processGroupName);
+        //自动配置
+        $this->consulConfig->autoConfig();
+        $this->consulConfig->merge();
     }
 
     /**

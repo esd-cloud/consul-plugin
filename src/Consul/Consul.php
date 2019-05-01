@@ -96,62 +96,10 @@ class Consul
     /**
      * Consul constructor.
      * @param ConsulConfig $consulConfig
-     * @throws ConfigException
      */
     public function __construct(ConsulConfig $consulConfig)
     {
         $this->consulConfig = $consulConfig;
-        $serverConfig = Server::$instance->getServerConfig();
-        $normalName = $serverConfig->getName();
-        $ip = $this->getServerIp($this->consulConfig->getBindNetDev());
-        if (empty($this->consulConfig->getServiceConfigs())) {
-            //如果没有配置ServiceConfigs那么将自动填充配置
-            foreach (Server::$instance->getPortManager()->getPorts() as $port) {
-                $agreement = "http";
-                if ($port->isHttp()) {
-                    $agreement = "http";
-                    if ($port->getPortConfig()->isEnableSsl()) {
-                        $agreement = "https";
-                    }
-                } elseif ($port->isWebSocket()) {
-                    $agreement = "ws";
-                    if ($port->getPortConfig()->isEnableSsl()) {
-                        $agreement = "wss";
-                    }
-                } elseif ($port->isTcp()) {
-                    $agreement = "tcp";
-                }
-                $consulServiceConfig = new ConsulServiceConfig();
-                $consulServiceConfig->setName("$normalName");
-                $consulServiceConfig->setId($normalName . "-" . $ip . "-" . $port->getPortConfig()->getPort());
-                $consulServiceConfig->setAddress($ip);
-                $consulServiceConfig->setPort($port->getPortConfig()->getPort());
-                $consulServiceConfig->setMeta(["server" => "go-swoole", "agreement" => $agreement]);
-                $consulCheckConfig = new ConsulCheckConfig();
-                $consulCheckConfig->setInterval("10s");
-                $consulCheckConfig->setTlsSkipVerify(true);
-                $consulCheckConfig->setNotes("go-swoole auto check");
-                $consulCheckConfig->setStatus("passing");
-                $consulServiceConfig->setCheckConfig($consulCheckConfig);
-                if ($port->isHttp() || $port->isWebSocket()) {
-                    $consulCheckConfig->setHttp("$agreement://$ip:{$port->getPortConfig()->getPort()}/actuator/health");
-                    $this->consulConfig->addServiceConfig($consulServiceConfig);
-                } elseif ($port->isTcp()) {
-                    $consulCheckConfig = new ConsulCheckConfig();
-                    $consulCheckConfig->setTcp("$agreement://$ip:{$port->getPortConfig()->getPort()}");
-                    $this->consulConfig->addServiceConfig($consulServiceConfig);
-                }
-            }
-        }
-        //修改全局的配置
-        foreach ($this->consulConfig->getServiceConfigs() as $consulServiceConfig) {
-            if (empty($consulServiceConfig->getName())) {
-                throw new ConfigException("ConsulServiceConfig缺少name字段");
-            }
-            if (!empty($consulConfig->getDefaultTags())) {
-                $consulServiceConfig->setTags($consulConfig->getDefaultTags());
-            }
-        }
         //生成配置文件并注册
         $this->sf = new ServiceFactory(["base_uri" => $consulConfig->getHost(), "http_errors" => false], Server::$instance->getLog());
         $this->session = $this->sf->get(SessionInterface::class);
@@ -193,16 +141,6 @@ class Consul
         } else {
             $this->setIsLeader(true);
         }
-    }
-
-    /**
-     * 获取ip
-     * @param $dev
-     * @return string
-     */
-    private function getServerIp($dev)
-    {
-        return exec("ip -4 addr show $dev | grep inet | awk '{print $2}' | cut -d / -f 1");
     }
 
     /**

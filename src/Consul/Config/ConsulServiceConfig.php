@@ -8,58 +8,61 @@
 
 namespace GoSwoole\Plugins\Consul\Config;
 
+use GoSwoole\BaseServer\Plugins\Config\BaseConfig;
+
 /**
  * ConsulService配置
  * Class ConsulServiceConfig
  * @package GoSwoole\Plugins\Consul\Config
  */
-class ConsulServiceConfig
+class ConsulServiceConfig extends BaseConfig
 {
+    const key = "consul.service_configs";
     /**
      * 服务名字,默认会是server名字
      * @var string|null
      */
-    private $name;
+    protected $name;
 
     /**
      * 指定此服务的唯一ID。每个代理必须是唯一的。Name如果未提供，则默认为参数。
      * @var string|null
      */
-    private $id;
+    protected $id;
 
     /**
      * 指定要分配给服务的标记列表。
      * 这些标记可用于以后的过滤，并通过API公开。
      * @var string[]|null
      */
-    private $tags;
+    protected $tags;
 
     /**
      * 指定服务的地址。如果未提供，则在DNS查询期间将代理的地址用作服务的地址。
      * @var string|null
      */
-    private $address;
+    protected $address;
 
     /**
      * 指定服务的端口。
      * @var int|null
      */
-    private $port;
+    protected $port;
 
     /**
      * 指定链接到服务实例的任意KV元数据。
      * @var string[]|null
      */
-    private $meta;
+    protected $meta;
 
     /**
      * @var ConsulCheckConfig|null
      */
-    private $checkConfig;
+    protected $checkConfig;
 
     public function __construct()
     {
-
+        parent::__construct(self::key);
     }
 
     /**
@@ -153,10 +156,16 @@ class ConsulServiceConfig
 
     /**
      * @param ConsulCheckConfig|null $checkConfig
+     * @throws \ReflectionException
      */
-    public function setCheckConfig(ConsulCheckConfig $checkConfig): void
+    public function setCheckConfig($checkConfig): void
     {
-        $this->checkConfig = $checkConfig;
+        if (is_array($checkConfig)){
+            $this->checkConfig = new ConsulCheckConfig();
+            $this->checkConfig->buildFromConfig($checkConfig);
+        }elseif($checkConfig instanceof ConsulCheckConfig){
+            $this->checkConfig = $checkConfig;
+        }
     }
 
     /**
@@ -194,7 +203,7 @@ class ConsulServiceConfig
     /**
      * 生成check的配置
      */
-    private function buildCheckConfigs()
+    protected function buildCheckConfigs()
     {
         if (empty($this->checkConfig)) return null;
         return $this->checkConfig->buildConfig();

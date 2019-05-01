@@ -9,23 +9,26 @@
 namespace GoSwoole\Plugins\Consul\Config;
 
 
+use GoSwoole\BaseServer\Plugins\Config\BaseConfig;
+
 /**
  * Class ConsulCheckConfig
  * @package GoSwoole\Plugins\Consul\Config
  */
-class ConsulCheckConfig
+class ConsulCheckConfig extends BaseConfig
 {
+    const key = "consul.service_configs.[].check_config";
     /**
      * 指定运行此检查的频率。这是HTTP和TCP检查所必需的。
      * @var string|null
      */
-    private $interval;
+    protected $interval;
 
     /**
      * 指定人类的任意信息
      * @var string|null
      */
-    private $notes;
+    protected $notes;
 
     /**
      * 指定在此时间之后与服务关联的检查应取消注册。
@@ -35,21 +38,21 @@ class ConsulCheckConfig
      * 通常应配置超时，该超时比给定服务的任何预期可恢复中断要长得多。
      * @var string|null
      */
-    private $deregisterCriticalServiceAfter;
+    protected $deregisterCriticalServiceAfter;
 
     /**
      * 指定gRPC支持标准gRPC运行状况检查协议的检查端点 。
      * Interval通过探测配置的端点，将在给定的状态下更新检查状态。
      * @var string|null
      */
-    private $gRPC;
+    protected $gRPC;
 
     /**
      * 指定是否使用TLS进行此gRPC运行状况检查。
      * 如果启用了TLS，则默认情况下，需要有效的TLS证书。可以通过设置TLSSkipVerify为关闭证书验证true。
      * @var bool|null
      */
-    private $gRPCUseTLS;
+    protected $gRPCUseTLS;
 
     /**
      * 指定HTTP检查以GET对每个值HTTP（预期为URL）执行请求Interval。
@@ -58,34 +61,34 @@ class ConsulCheckConfig
      * 可以使用TLSSkipVerify。来控制证书验证 。
      * @var string|null
      */
-    private $http;
+    protected $http;
 
     /**
      * 指定用于HTTP检查的其他HTTP方法。
      * 如果未指定任何值，GET则使用。
      * @var string|null
      */
-    private $method;
+    protected $method;
 
     /**
      * 指定应为HTTP检查设置的一组标头。
      * 每个标头可以有多个值。
      * @var string[]|null
      */
-    private $header;
+    protected $header;
 
     /**
      * 在脚本，HTTP，TCP或gRPC检查的情况下指定传出连接的超时。
      * 可以以“10s”或“5m”的形式指定（即分别为10秒或5分钟）。
      * @var string|null
      */
-    private $timeout;
+    protected $timeout;
 
     /**
      * 指定是否不应验证HTTPS检查的证书。
      * @var bool|null
      */
-    private $tlsSkipVerify;
+    protected $tlsSkipVerify;
 
     /**
      * 指定a TCP连接每个的值TCP （预期是IP或主机名加端口组合）Interval。
@@ -93,19 +96,24 @@ class ConsulCheckConfig
      * 如果主机名解析为IPv4和IPv6地址，则将尝试对这两个地址进行尝试，并且第一次成功的连接尝试将导致成功检查。
      * @var string|null
      */
-    private $tcp;
+    protected $tcp;
 
     /**
      * 指定这是TTL检查，并且必须定期使用TTL端点来更新检查的状态。
      * @var string|null
      */
-    private $ttl;
+    protected $ttl;
 
     /**
      * 指定运行状况检查的初始状态。
      * @var string|null
      */
-    private $status;
+    protected $status;
+
+    public function __construct()
+    {
+        parent::__construct(self::key);
+    }
 
     /**
      * @return string|null
@@ -321,19 +329,19 @@ class ConsulCheckConfig
     public function buildConfig()
     {
         return array_filter([
-            "Interval" =>$this->getInterval(),
-            "Notes"=>$this->getNotes(),
-            "DeregisterCriticalServiceAfter"=>$this->getDeregisterCriticalServiceAfter(),
-            "GRPC"=>$this->getGRPC(),
-            "GRPCUseTLS"=>$this->getGRPCUseTLS(),
-            "HTTP"=>$this->getHttp(),
-            "Method"=>$this->getMethod(),
-            "Header"=>$this->getHeader(),
-            "Timeout"=>$this->getTimeout(),
-            "TLSSkipVerify"=>$this->getTlsSkipVerify(),
-            "TCP"=>$this->getTcp(),
-            "TTL"=>$this->getTtl(),
-            "Status"=>$this->getStatus()
+            "Interval" => $this->getInterval(),
+            "Notes" => $this->getNotes(),
+            "DeregisterCriticalServiceAfter" => $this->getDeregisterCriticalServiceAfter(),
+            "GRPC" => $this->getGRPC(),
+            "GRPCUseTLS" => $this->getGRPCUseTLS(),
+            "HTTP" => $this->getHttp(),
+            "Method" => $this->getMethod(),
+            "Header" => $this->getHeader(),
+            "Timeout" => $this->getTimeout(),
+            "TLSSkipVerify" => $this->getTlsSkipVerify(),
+            "TCP" => $this->getTcp(),
+            "TTL" => $this->getTtl(),
+            "Status" => $this->getStatus()
         ]);
     }
 
