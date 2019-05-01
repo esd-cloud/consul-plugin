@@ -81,8 +81,7 @@ class ConsulConfig extends BaseConfig
      */
     private function getServerIp($dev)
     {
-        return "127.0.0.1";
-        //return exec("ip -4 addr show $dev | grep inet | awk '{print $2}' | cut -d / -f 1");
+        return exec("ip -4 addr show $dev | grep inet | awk '{print $2}' | cut -d / -f 1");
     }
 
     /**
