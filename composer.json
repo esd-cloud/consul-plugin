@@ -1,13 +1,13 @@
 {
   "require": {
-    "go-swoole/base-server": "~0.1",
-    "go-swoole/consul": "~0.1",
-    "go-swoole/actuator-plugin": "~0.1"
+    "esd/base-server": "~0.1",
+    "esd/consul": "~0.1",
+    "esd/actuator-plugin": "~0.1"
   },
   "autoload": {
     "psr-4": {
-      "GoSwoole\\Plugins\\": "src/",
-      "GoSwoole\\Plugins\\Consul\\ExampleClass\\": "exampleClass/"
+      "ESD\\Plugins\\": "src/",
+      "ESD\\Plugins\\Consul\\ExampleClass\\": "exampleClass/"
     }
   },
   "authors": [
@@ -17,7 +17,7 @@
       "homepage": "https://github.com/tmtbe"
     }
   ],
-  "name": "go-swoole/consul-plugin",
+  "name": "esd/consul-plugin",
   "type": "library",
   "keywords": ["server", "swoole"],
   "description": "consul-plugin",

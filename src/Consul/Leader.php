@@ -6,12 +6,12 @@
  * Time: 16:21
  */
 
-namespace GoSwoole\Plugins\Consul;
+namespace ESD\Plugins\Consul;
 
 /**
  * 通过这个类判断是否是leader
  * Class Leader
- * @package GoSwoole\Plugins\Consul
+ * @package ESD\Plugins\Consul
  */
 class Leader
 {

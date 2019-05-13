@@ -1,13 +1,13 @@
 <?php
 
-use GoSwoole\BaseServer\ExampleClass\Server\DefaultServer;
-use GoSwoole\BaseServer\Server\Config\PortConfig;
-use GoSwoole\BaseServer\Server\Config\ServerConfig;
-use GoSwoole\Plugins\Aop\AopConfig;
-use GoSwoole\Plugins\Aop\AopPlugin;
-use GoSwoole\Plugins\Consul\Config\ConsulConfig;
-use GoSwoole\Plugins\Consul\ConsulPlugin;
-use GoSwoole\Plugins\Consul\ExampleClass\ConsulPort;
+use ESD\BaseServer\ExampleClass\Server\DefaultServer;
+use ESD\BaseServer\Server\Config\PortConfig;
+use ESD\BaseServer\Server\Config\ServerConfig;
+use ESD\Plugins\Aop\AopConfig;
+use ESD\Plugins\Aop\AopPlugin;
+use ESD\Plugins\Consul\Config\ConsulConfig;
+use ESD\Plugins\Consul\ConsulPlugin;
+use ESD\Plugins\Consul\ExampleClass\ConsulPort;
 
 require __DIR__ . '/../vendor/autoload.php';
 

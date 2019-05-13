@@ -6,10 +6,10 @@
  * Time: 15:42
  */
 
-namespace GoSwoole\Plugins\Consul\Event;
+namespace ESD\Plugins\Consul\Event;
 
 
-use GoSwoole\BaseServer\Plugins\Event\Event;
+use ESD\BaseServer\Plugins\Event\Event;
 
 class ConsulLeaderChangeEvent extends Event
 {

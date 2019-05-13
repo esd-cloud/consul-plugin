@@ -6,11 +6,11 @@
  * Time: 15:42
  */
 
-namespace GoSwoole\Plugins\Consul\Event;
+namespace ESD\Plugins\Consul\Event;
 
 
-use GoSwoole\BaseServer\Plugins\Event\Event;
-use GoSwoole\Plugins\Consul\Beans\ConsulServiceListInfo;
+use ESD\BaseServer\Plugins\Event\Event;
+use ESD\Plugins\Consul\Beans\ConsulServiceListInfo;
 
 class ConsulServiceChangeEvent extends Event
 {

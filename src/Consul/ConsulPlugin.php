@@ -6,20 +6,20 @@
  * Time: 14:42
  */
 
-namespace GoSwoole\Plugins\Consul;
+namespace ESD\Plugins\Consul;
 
-use GoSwoole\BaseServer\Exception;
-use GoSwoole\BaseServer\Plugins\Event\ProcessEvent;
-use GoSwoole\BaseServer\Plugins\Logger\GetLogger;
-use GoSwoole\BaseServer\Server\Context;
-use GoSwoole\BaseServer\Server\Exception\ConfigException;
-use GoSwoole\BaseServer\Server\Plugin\AbstractPlugin;
-use GoSwoole\BaseServer\Server\Plugin\PluginInterfaceManager;
-use GoSwoole\BaseServer\Server\Server;
-use GoSwoole\Plugins\Actuator\ActuatorPlugin;
-use GoSwoole\Plugins\Consul\Config\ConsulConfig;
-use GoSwoole\Plugins\Consul\Event\ConsulLeaderChangeEvent;
-use GoSwoole\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\BaseServer\Exception;
+use ESD\BaseServer\Plugins\Event\ProcessEvent;
+use ESD\BaseServer\Plugins\Logger\GetLogger;
+use ESD\BaseServer\Server\Context;
+use ESD\BaseServer\Server\Exception\ConfigException;
+use ESD\BaseServer\Server\Plugin\AbstractPlugin;
+use ESD\BaseServer\Server\Plugin\PluginInterfaceManager;
+use ESD\BaseServer\Server\Server;
+use ESD\Plugins\Actuator\ActuatorPlugin;
+use ESD\Plugins\Consul\Config\ConsulConfig;
+use ESD\Plugins\Consul\Event\ConsulLeaderChangeEvent;
+use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
 
 
 class ConsulPlugin extends AbstractPlugin

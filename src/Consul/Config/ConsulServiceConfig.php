@@ -6,14 +6,14 @@
  * Time: 10:29
  */
 
-namespace GoSwoole\Plugins\Consul\Config;
+namespace ESD\Plugins\Consul\Config;
 
-use GoSwoole\BaseServer\Plugins\Config\BaseConfig;
+use ESD\BaseServer\Plugins\Config\BaseConfig;
 
 /**
  * ConsulService配置
  * Class ConsulServiceConfig
- * @package GoSwoole\Plugins\Consul\Config
+ * @package ESD\Plugins\Consul\Config
  */
 class ConsulServiceConfig extends BaseConfig
 {

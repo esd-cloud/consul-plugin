@@ -6,14 +6,14 @@
  * Time: 11:59
  */
 
-namespace GoSwoole\Plugins\Consul\ExampleClass;
+namespace ESD\Plugins\Consul\ExampleClass;
 
 
-use GoSwoole\BaseServer\Server\Beans\Request;
-use GoSwoole\BaseServer\Server\Beans\Response;
-use GoSwoole\BaseServer\Server\Beans\WebSocketFrame;
-use GoSwoole\BaseServer\Server\ServerPort;
-use GoSwoole\Plugins\Consul\Services;
+use ESD\BaseServer\Server\Beans\Request;
+use ESD\BaseServer\Server\Beans\Response;
+use ESD\BaseServer\Server\Beans\WebSocketFrame;
+use ESD\BaseServer\Server\ServerPort;
+use ESD\Plugins\Consul\Services;
 
 class ConsulPort extends ServerPort
 {

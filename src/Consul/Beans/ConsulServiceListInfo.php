@@ -6,7 +6,7 @@
  * Time: 17:09
  */
 
-namespace GoSwoole\Plugins\Consul\Beans;
+namespace ESD\Plugins\Consul\Beans;
 
 
 class ConsulServiceListInfo

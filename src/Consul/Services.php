@@ -6,18 +6,18 @@
  * Time: 17:00
  */
 
-namespace GoSwoole\Plugins\Consul;
+namespace ESD\Plugins\Consul;
 
 
-use GoSwoole\BaseServer\Server\Server;
-use GoSwoole\Plugins\Consul\Beans\ConsulServiceInfo;
-use GoSwoole\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
-use GoSwoole\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\BaseServer\Server\Server;
+use ESD\Plugins\Consul\Beans\ConsulServiceInfo;
+use ESD\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
+use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
 
 /**
  * 通过这个类获取服务
  * Class Services
- * @package GoSwoole\Plugins\Consul
+ * @package ESD\Plugins\Consul
  */
 class Services
 {

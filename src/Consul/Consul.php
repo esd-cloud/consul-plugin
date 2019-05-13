@@ -6,24 +6,24 @@
  * Time: 10:46
  */
 
-namespace GoSwoole\Plugins\Consul;
+namespace ESD\Plugins\Consul;
 
 
-use GoSwoole\BaseServer\Plugins\Logger\GetLogger;
-use GoSwoole\BaseServer\Server\Exception\ConfigException;
-use GoSwoole\BaseServer\Server\Server;
-use GoSwoole\Consul\Health;
-use GoSwoole\Consul\KV;
-use GoSwoole\Consul\ServiceFactory;
-use GoSwoole\Consul\Session;
-use GoSwoole\Plugins\Consul\Beans\ConsulServiceInfo;
-use GoSwoole\Plugins\Consul\Beans\ConsulServiceListInfo;
-use GoSwoole\Plugins\Consul\Config\ConsulCheckConfig;
-use GoSwoole\Plugins\Consul\Config\ConsulConfig;
-use GoSwoole\Plugins\Consul\Config\ConsulServiceConfig;
-use GoSwoole\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
-use GoSwoole\Plugins\Consul\Event\ConsulLeaderChangeEvent;
-use GoSwoole\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\BaseServer\Plugins\Logger\GetLogger;
+use ESD\BaseServer\Server\Exception\ConfigException;
+use ESD\BaseServer\Server\Server;
+use ESD\Consul\Health;
+use ESD\Consul\KV;
+use ESD\Consul\ServiceFactory;
+use ESD\Consul\Session;
+use ESD\Plugins\Consul\Beans\ConsulServiceInfo;
+use ESD\Plugins\Consul\Beans\ConsulServiceListInfo;
+use ESD\Plugins\Consul\Config\ConsulCheckConfig;
+use ESD\Plugins\Consul\Config\ConsulConfig;
+use ESD\Plugins\Consul\Config\ConsulServiceConfig;
+use ESD\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
+use ESD\Plugins\Consul\Event\ConsulLeaderChangeEvent;
+use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
 use SensioLabs\Consul\ConsulResponse;
 use SensioLabs\Consul\Services\Agent;
 use SensioLabs\Consul\Services\AgentInterface;
@@ -33,7 +33,7 @@ use SensioLabs\Consul\Services\SessionInterface;
 
 /**
  * Class Consul
- * @package GoSwoole\Plugins\Consul
+ * @package ESD\Plugins\Consul
  */
 class Consul
 {

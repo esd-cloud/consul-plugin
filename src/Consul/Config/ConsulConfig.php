@@ -6,16 +6,16 @@
  * Time: 11:45
  */
 
-namespace GoSwoole\Plugins\Consul\Config;
+namespace ESD\Plugins\Consul\Config;
 
-use GoSwoole\BaseServer\Plugins\Config\BaseConfig;
-use GoSwoole\BaseServer\Server\Config\PortConfig;
-use GoSwoole\BaseServer\Server\Exception\ConfigException;
-use GoSwoole\BaseServer\Server\Server;
+use ESD\BaseServer\Plugins\Config\BaseConfig;
+use ESD\BaseServer\Server\Config\PortConfig;
+use ESD\BaseServer\Server\Exception\ConfigException;
+use ESD\BaseServer\Server\Server;
 
 /**
  * Class ConsulConfig
- * @package GoSwoole\Plugins\Consul\Config
+ * @package ESD\Plugins\Consul\Config
  */
 class ConsulConfig extends BaseConfig
 {
@@ -116,11 +116,11 @@ class ConsulConfig extends BaseConfig
                 $consulServiceConfig->setId($normalName . "-" . $ip . "-" . $portConfig->getPort());
                 $consulServiceConfig->setAddress($ip);
                 $consulServiceConfig->setPort($portConfig->getPort());
-                $consulServiceConfig->setMeta(["server" => "go-swoole", "agreement" => $agreement]);
+                $consulServiceConfig->setMeta(["server" => "esd", "agreement" => $agreement]);
                 $consulCheckConfig = new ConsulCheckConfig();
                 $consulCheckConfig->setInterval("10s");
                 $consulCheckConfig->setTlsSkipVerify(true);
-                $consulCheckConfig->setNotes("go-swoole auto check");
+                $consulCheckConfig->setNotes("esd auto check");
                 $consulCheckConfig->setStatus("passing");
                 $consulServiceConfig->setCheckConfig($consulCheckConfig);
                 if ($portConfig->isOpenHttpProtocol() || $portConfig->isOpenWebsocketProtocol()) {
