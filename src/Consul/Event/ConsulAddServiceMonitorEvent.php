@@ -8,8 +8,7 @@
 
 namespace ESD\Plugins\Consul\Event;
 
-
-use ESD\BaseServer\Plugins\Event\Event;
+use ESD\Core\Plugins\Event\Event;
 
 class ConsulAddServiceMonitorEvent extends Event
 {

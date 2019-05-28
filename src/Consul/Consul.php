@@ -8,22 +8,18 @@
 
 namespace ESD\Plugins\Consul;
 
-
-use ESD\BaseServer\Plugins\Logger\GetLogger;
-use ESD\BaseServer\Server\Exception\ConfigException;
-use ESD\BaseServer\Server\Server;
 use ESD\Consul\Health;
 use ESD\Consul\KV;
 use ESD\Consul\ServiceFactory;
 use ESD\Consul\Session;
+use ESD\Core\Plugins\Logger\GetLogger;
 use ESD\Plugins\Consul\Beans\ConsulServiceInfo;
 use ESD\Plugins\Consul\Beans\ConsulServiceListInfo;
-use ESD\Plugins\Consul\Config\ConsulCheckConfig;
 use ESD\Plugins\Consul\Config\ConsulConfig;
-use ESD\Plugins\Consul\Config\ConsulServiceConfig;
 use ESD\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
 use ESD\Plugins\Consul\Event\ConsulLeaderChangeEvent;
 use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\Server\Co\Server;
 use SensioLabs\Consul\ConsulResponse;
 use SensioLabs\Consul\Services\Agent;
 use SensioLabs\Consul\Services\AgentInterface;
@@ -96,6 +92,8 @@ class Consul
     /**
      * Consul constructor.
      * @param ConsulConfig $consulConfig
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public function __construct(ConsulConfig $consulConfig)
     {
@@ -118,20 +116,17 @@ class Consul
             $this->agent->registerService($body);
         }
         //监听需要监控的服务的事件
-        goWithContext(function () {
-            $eventChannel = Server::$instance->getEventDispatcher()->listen(ConsulAddServiceMonitorEvent::ConsulAddServiceMonitorEvent);
-            while (true) {
-                $consulAddServiceMonitorEvent = $eventChannel->pop();
-                if ($consulAddServiceMonitorEvent instanceof ConsulAddServiceMonitorEvent) {
-                    $service = $consulAddServiceMonitorEvent->getService();
-                    if (!array_key_exists($service, $this->listonServices)) {
-                        goWithContext(function () use ($service) {
-                            $this->monitorService($service, 0);
-                        });
-                    }
-                }
+
+        $call = Server::$instance->getEventDispatcher()->listen(ConsulAddServiceMonitorEvent::ConsulAddServiceMonitorEvent);
+        $call->call(function (ConsulAddServiceMonitorEvent $consulAddServiceMonitorEvent) {
+            $service = $consulAddServiceMonitorEvent->getService();
+            if (!array_key_exists($service, $this->listonServices)) {
+                goWithContext(function () use ($service) {
+                    $this->monitorService($service, 0);
+                });
             }
         });
+
         //Leader监听
         if (!empty($consulConfig->getLeaderName())) {
             goWithContext(function () {
@@ -147,6 +142,8 @@ class Consul
      * 添加监听
      * @param string $service
      * @param int $index
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     private function monitorService(string $service, int $index)
     {
@@ -176,7 +173,8 @@ class Consul
     }
 
     /**
-     * 竞选leader
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     private function getLeader()
     {
@@ -214,6 +212,8 @@ class Consul
     /**
      * 监控Leader变化
      * @param int $index
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     private function monitorLeader(int $index)
     {
@@ -252,6 +252,8 @@ class Consul
 
     /**
      * @param bool $isLeader
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public function setIsLeader(bool $isLeader): void
     {
@@ -268,6 +270,8 @@ class Consul
     /**
      * 释放Leader
      * @param bool $useAsync
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public function releaseLeader($useAsync = true)
     {
@@ -287,6 +291,8 @@ class Consul
     /**
      * 注销服务
      * @param bool $useAsync
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public function deregisterService($useAsync = true)
     {

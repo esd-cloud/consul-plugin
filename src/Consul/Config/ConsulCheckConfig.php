@@ -9,7 +9,7 @@
 namespace ESD\Plugins\Consul\Config;
 
 
-use ESD\BaseServer\Plugins\Config\BaseConfig;
+use ESD\Core\Plugins\Config\BaseConfig;
 
 /**
  * Class ConsulCheckConfig

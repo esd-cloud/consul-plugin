@@ -1,13 +1,13 @@
 <?php
 
-use ESD\BaseServer\ExampleClass\Server\DefaultServer;
-use ESD\BaseServer\Server\Config\PortConfig;
-use ESD\BaseServer\Server\Config\ServerConfig;
+use ESD\Core\Server\Config\PortConfig;
+use ESD\Core\Server\Config\ServerConfig;
 use ESD\Plugins\Aop\AopConfig;
 use ESD\Plugins\Aop\AopPlugin;
 use ESD\Plugins\Consul\Config\ConsulConfig;
 use ESD\Plugins\Consul\ConsulPlugin;
 use ESD\Plugins\Consul\ExampleClass\ConsulPort;
+use ESD\Server\Co\ExampleClass\DefaultServer;
 
 require __DIR__ . '/../vendor/autoload.php';
 

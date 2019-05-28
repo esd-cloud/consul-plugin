@@ -8,11 +8,10 @@
 
 namespace ESD\Plugins\Consul;
 
-
-use ESD\BaseServer\Server\Server;
 use ESD\Plugins\Consul\Beans\ConsulServiceInfo;
 use ESD\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
 use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\Server\Co\Server;
 
 /**
  * 通过这个类获取服务
@@ -29,6 +28,8 @@ class Services
     /**
      * 服务变更
      * @param ConsulServiceChangeEvent $consulServiceChangeEvent
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public static function modifyServices(ConsulServiceChangeEvent $consulServiceChangeEvent)
     {
@@ -44,6 +45,8 @@ class Services
      * 获取服务
      * @param string $service
      * @return ConsulServiceInfo[]
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public static function getServices(string $service): array
     {
@@ -54,8 +57,8 @@ class Services
                 new ConsulAddServiceMonitorEvent($service),
                 Server::$instance->getProcessManager()->getProcessFromName(ConsulPlugin::processName)
             );
-            $channel = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent . "::" . $service, null, true);
-            $consulGetServiceEvent = $channel->pop();
+            $call = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent . "::" . $service, null, true);
+            $consulGetServiceEvent = $call->wait();
             if ($consulGetServiceEvent instanceof ConsulServiceChangeEvent) {
                 $consulServiceInfos = $consulGetServiceEvent->getConsulServiceListInfo()->getConsulServiceInfos();
             }

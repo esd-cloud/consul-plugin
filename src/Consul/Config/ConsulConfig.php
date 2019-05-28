@@ -8,10 +8,11 @@
 
 namespace ESD\Plugins\Consul\Config;
 
-use ESD\BaseServer\Plugins\Config\BaseConfig;
-use ESD\BaseServer\Server\Config\PortConfig;
-use ESD\BaseServer\Server\Exception\ConfigException;
-use ESD\BaseServer\Server\Server;
+
+use ESD\Core\Plugins\Config\BaseConfig;
+use ESD\Core\Plugins\Config\ConfigException;
+use ESD\Core\Server\Config\PortConfig;
+use ESD\Server\Co\Server;
 
 /**
  * Class ConsulConfig
@@ -87,6 +88,8 @@ class ConsulConfig extends BaseConfig
     /**
      * 自动配置
      * @throws ConfigException
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      * @throws \ReflectionException
      */
     public function autoConfig()
@@ -111,6 +114,7 @@ class ConsulConfig extends BaseConfig
                 } elseif ($portConfig->getSockType() == PortConfig::SWOOLE_SOCK_TCP || $portConfig->getSockType() == PortConfig::SWOOLE_SOCK_TCP6) {
                     $agreement = "tcp";
                 }
+                //设置一个服务config
                 $consulServiceConfig = new ConsulServiceConfig();
                 $consulServiceConfig->setName($normalName);
                 $consulServiceConfig->setId($normalName . "-" . $ip . "-" . $portConfig->getPort());
@@ -176,7 +180,6 @@ class ConsulConfig extends BaseConfig
 
     /**
      * @param ConsulServiceConfig[]|null $serviceConfigs
-     * @throws \ReflectionException
      */
     public function setServiceConfigs(?array $serviceConfigs): void
     {

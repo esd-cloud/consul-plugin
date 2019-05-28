@@ -9,7 +9,7 @@
 namespace ESD\Plugins\Consul\Event;
 
 
-use ESD\BaseServer\Plugins\Event\Event;
+use ESD\Core\Plugins\Event\Event;
 use ESD\Plugins\Consul\Beans\ConsulServiceListInfo;
 
 class ConsulServiceChangeEvent extends Event

@@ -8,19 +8,17 @@
 
 namespace ESD\Plugins\Consul;
 
-use ESD\BaseServer\Exception;
-use ESD\BaseServer\Plugins\Event\ProcessEvent;
-use ESD\BaseServer\Plugins\Logger\GetLogger;
-use ESD\BaseServer\Server\Context;
-use ESD\BaseServer\Server\Exception\ConfigException;
-use ESD\BaseServer\Server\Plugin\AbstractPlugin;
-use ESD\BaseServer\Server\Plugin\PluginInterfaceManager;
-use ESD\BaseServer\Server\Server;
+
+use ESD\Core\Context\Context;
+use ESD\Core\PlugIn\AbstractPlugin;
+use ESD\Core\PlugIn\PluginInterfaceManager;
+use ESD\Core\Plugins\Logger\GetLogger;
+use ESD\Core\Server\Process\ProcessEvent;
 use ESD\Plugins\Actuator\ActuatorPlugin;
 use ESD\Plugins\Consul\Config\ConsulConfig;
 use ESD\Plugins\Consul\Event\ConsulLeaderChangeEvent;
 use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
-
+use ESD\Server\Co\Server;
 
 class ConsulPlugin extends AbstractPlugin
 {
@@ -42,6 +40,8 @@ class ConsulPlugin extends AbstractPlugin
      * ConsulPlugin constructor.
      * @param ConsulConfig $consulConfig
      * @throws \ReflectionException
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public function __construct(ConsulConfig $consulConfig = null)
     {
@@ -57,7 +57,9 @@ class ConsulPlugin extends AbstractPlugin
     /**
      * @param PluginInterfaceManager $pluginInterfaceManager
      * @return mixed|void
-     * @throws Exception
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
+     * @throws \ESD\Core\Exception
      */
     public function onAdded(PluginInterfaceManager $pluginInterfaceManager)
     {
@@ -81,14 +83,15 @@ class ConsulPlugin extends AbstractPlugin
     /**
      * 在服务启动前
      * @param Context $context
-     * @return mixed
-     * @throws ConfigException
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
+     * @throws \ESD\Core\Plugins\Config\ConfigException
      * @throws \ReflectionException
      */
     public function beforeServerStart(Context $context)
     {
         //添加一个helper进程
-        $context->getServer()->addProcess(self::processName, HelperConsulProcess::class, self::processGroupName);
+        Server::$instance->addProcess(self::processName, HelperConsulProcess::class, self::processGroupName);
         //自动配置
         $this->consulConfig->autoConfig();
         $this->consulConfig->merge();
@@ -97,42 +100,32 @@ class ConsulPlugin extends AbstractPlugin
     /**
      * 在进程启动前
      * @param Context $context
-     * @return mixed
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     public function beforeProcessStart(Context $context)
     {
         //每个进程监听Leader变更
-        goWithContext(function () {
-            $channel = Server::$instance->getEventDispatcher()->listen(ConsulLeaderChangeEvent::ConsulLeaderChangeEvent);
-            while (true) {
-                $event = $channel->pop();
-                if ($event instanceof ConsulLeaderChangeEvent) {
-                    $leaderStatus = $event->isLeader() ? "true" : "false";
-                    $this->debug("收到Leader变更事件：$leaderStatus");
-                    Leader::$isLeader = $event->isLeader();
-                }
-            }
+        $call = Server::$instance->getEventDispatcher()->listen(ConsulLeaderChangeEvent::ConsulLeaderChangeEvent);
+        $call->call(function (ConsulLeaderChangeEvent $event) {
+            $leaderStatus = $event->isLeader() ? "true" : "false";
+            $this->debug("收到Leader变更事件：$leaderStatus");
+            Leader::$isLeader = $event->isLeader();
         });
 
         //每个进程监听Service变更
-        goWithContext(function () {
-            $channel = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent);
-            while (true) {
-                $event = $channel->pop();
-                if ($event instanceof ConsulServiceChangeEvent) {
-                    $this->debug("收到Service变更事件：{$event->getConsulServiceListInfo()->getServiceName()}");
-                    Services::modifyServices($event);
-                }
-            }
+        $call = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent);
+        $call->call(function (ConsulServiceChangeEvent $event) {
+            $this->debug("收到Service变更事件：{$event->getConsulServiceListInfo()->getServiceName()}");
+            Services::modifyServices($event);
         });
 
         //Helper进程
-        if ($context->getServer()->getProcessManager()->getCurrentProcess()->getProcessName() === self::processName) {
-            goWithContext(function () {
-                $this->consul = new Consul($this->consulConfig);
-                //进程监听关服信息
-                $channel = Server::$instance->getEventDispatcher()->listen(ProcessEvent::ProcessStopEvent, null, true);
-                $channel->pop();
+        if (Server::$instance->getProcessManager()->getCurrentProcess()->getProcessName() === self::processName) {
+            $this->consul = new Consul($this->consulConfig);
+            //进程监听关服信息
+            $call = Server::$instance->getEventDispatcher()->listen(ProcessEvent::ProcessStopEvent, null, true);
+            $call->call(function () {
                 //同步请求释放leader，关服操作无法使用协程
                 $this->consul->releaseLeader(false);
                 //同步请求注销service
