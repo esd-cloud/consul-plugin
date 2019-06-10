@@ -18,6 +18,8 @@ use ESD\Plugins\Actuator\ActuatorPlugin;
 use ESD\Plugins\Consul\Config\ConsulConfig;
 use ESD\Plugins\Consul\Event\ConsulLeaderChangeEvent;
 use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\Psr\Cloud\Leader;
+use ESD\Psr\Cloud\Services;
 use ESD\Server\Co\Server;
 
 class ConsulPlugin extends AbstractPlugin
@@ -35,6 +37,14 @@ class ConsulPlugin extends AbstractPlugin
      * @var Consul
      */
     private $consul;
+    /**
+     * @var ConsulLeader
+     */
+    private $leader;
+    /**
+     * @var ConsulServices
+     */
+    private $service;
 
     /**
      * ConsulPlugin constructor.
@@ -91,6 +101,11 @@ class ConsulPlugin extends AbstractPlugin
         //自动配置
         $this->consulConfig->autoConfig();
         $this->consulConfig->merge();
+        //注入
+        $this->leader = new ConsulLeader();
+        $this->service = new ConsulServices();
+        $this->setToDIContainer(Leader::class, $this->leader);
+        $this->setToDIContainer(Services::class, $this->service);
     }
 
     /**
@@ -103,15 +118,15 @@ class ConsulPlugin extends AbstractPlugin
         $call = Server::$instance->getEventDispatcher()->listen(ConsulLeaderChangeEvent::ConsulLeaderChangeEvent);
         $call->call(function (ConsulLeaderChangeEvent $event) {
             $leaderStatus = $event->isLeader() ? "true" : "false";
+            $this->leader->setLeader($event->isLeader());
             $this->debug("收到Leader变更事件：$leaderStatus");
-            Leader::$isLeader = $event->isLeader();
         });
 
         //每个进程监听Service变更
         $call = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent);
         $call->call(function (ConsulServiceChangeEvent $event) {
             $this->debug("收到Service变更事件：{$event->getConsulServiceListInfo()->getServiceName()}");
-            Services::modifyServices($event);
+            $this->service->modifyServices($event);
         });
 
         //Helper进程

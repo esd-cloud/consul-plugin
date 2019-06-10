@@ -9,32 +9,44 @@
 namespace ESD\Plugins\Consul;
 
 use ESD\Plugins\Consul\Beans\ConsulServiceInfo;
+use ESD\Plugins\Consul\Beans\ConsulServiceListInfo;
 use ESD\Plugins\Consul\Config\ConsulConfig;
 use ESD\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
 use ESD\Plugins\Consul\Event\ConsulOneServiceChangeEvent;
 use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\Psr\Cloud\ServiceInfoList;
+use ESD\Psr\Cloud\Services;
 use ESD\Server\Co\Server;
 
 /**
  * 通过这个类获取服务
- * Class Services
+ * Class ConsulServices
  * @package ESD\Plugins\Consul
  */
-class Services
+class ConsulServices implements Services
 {
+    /**
+     * @var ConsulConfig
+     */
+    protected $consulConfig;
     /**
      * @var ConsulServiceInfo[]
      */
-    private static $services = [];
+    protected $services = [];
+
+    public function __construct()
+    {
+        $this->consulConfig = DIGet(ConsulConfig::class);
+    }
 
     /**
      * 服务变更
      * @param ConsulServiceChangeEvent $consulServiceChangeEvent
      */
-    public static function modifyServices(ConsulServiceChangeEvent $consulServiceChangeEvent)
+    public function modifyServices(ConsulServiceChangeEvent $consulServiceChangeEvent)
     {
-        self::$services[$consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName()]
-            = $consulServiceChangeEvent->getConsulServiceListInfo()->getConsulServiceInfos();
+        $this->services[$consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName()]
+            = $consulServiceChangeEvent->getConsulServiceListInfo()->getServiceInfos();
         //同时本进程触发更为细化的携带服务名的ConsulServiceChangeEvent事件
         $consulOneServiceChangeEvent = new ConsulOneServiceChangeEvent($consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName(),
             $consulServiceChangeEvent->getConsulServiceListInfo()
@@ -45,11 +57,11 @@ class Services
     /**
      * 获取服务
      * @param string $service
-     * @return ConsulServiceInfo[]
+     * @return ServiceInfoList|null
      */
-    public static function getServices(string $service): ?array
+    public function getServices(string $service): ?ServiceInfoList
     {
-        $consulServiceInfos = self::$services[$service] ?? null;
+        $consulServiceInfos = $this->services[$service] ?? null;
         //为null只有二种情况，一是第一次获取，二是reload后进程数据丢失，这时重新获取
         if ($consulServiceInfos == null) {
             Server::$instance->getEventDispatcher()->dispatchProcessEvent(
@@ -59,14 +71,12 @@ class Services
             $call = Server::$instance->getEventDispatcher()->listen(ConsulOneServiceChangeEvent::ConsulOneServiceChangeEvent . "::" . $service, null, true);
             /** @var ConsulOneServiceChangeEvent $consulGetServiceEvent */
             $consulGetServiceEvent = $call->wait();
-            $consulServiceInfos = $consulGetServiceEvent->getConsulServiceListInfo()->getConsulServiceInfos();
+            $consulServiceInfos = $consulGetServiceEvent->getConsulServiceListInfo()->getServiceInfos();
         }
-        /** @var ConsulConfig $consulConfig */
-        $consulConfig = DIGet(ConsulConfig::class);
-        $serverListQueryTags = $consulConfig->getServerListQueryTags();
+        $serverListQueryTags = $this->consulConfig->getServerListQueryTags();
         $tag = null;
         if ($serverListQueryTags != null) {
-            $tag = $serverListQueryTags[$service] ?? $consulConfig->getDefaultQueryTag();
+            $tag = $serverListQueryTags[$service] ?? $this->consulConfig->getDefaultQueryTag();
         }
         if ($tag != null) {
             foreach ($consulServiceInfos as $key => $value) {
@@ -79,7 +89,7 @@ class Services
                 }
             }
         }
-
-        return $consulServiceInfos;
+        $serviceInfoList = new ConsulServiceListInfo($service, $consulServiceInfos);
+        return $serviceInfoList;
     }
 }

@@ -12,7 +12,7 @@ use ESD\Core\Server\Beans\Request;
 use ESD\Core\Server\Beans\Response;
 use ESD\Core\Server\Beans\WebSocketFrame;
 use ESD\Core\Server\Port\ServerPort;
-use ESD\Plugins\Consul\Services;
+use ESD\Psr\Cloud\Services;
 
 class ConsulPort extends ServerPort
 {
@@ -39,7 +39,9 @@ class ConsulPort extends ServerPort
 
     public function onHttpRequest(Request $request, Response $response)
     {
-        print_r(Services::getServices("user"));
+        /** @var Services $service */
+        $service = DIGet(Services::class);
+        print_r($service->getServices("user"));
         $response->end("OK");
     }
 
