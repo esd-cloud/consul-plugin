@@ -41,7 +41,7 @@ class ConsulPort extends ServerPort
     {
         /** @var Services $service */
         $service = DIGet(Services::class);
-        print_r($service->getServices("user"));
+        print_r($service->getServices("esd"));
         $response->end("OK");
     }
 

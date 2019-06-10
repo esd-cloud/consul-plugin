@@ -13,5 +13,9 @@ use ESD\Psr\Cloud\ServiceInfo;
 
 class ConsulServiceInfo extends ServiceInfo
 {
-
+    public function __construct($serviceName, $serviceId, $serviceAddress, $servicePort, $serviceMeta, $serviceTags)
+    {
+        $serviceAgreement = $serviceMeta['agreement'];
+        parent::__construct($serviceName, $serviceId, $serviceAddress, $servicePort, $serviceMeta, $serviceTags, $serviceAgreement);
+    }
 }
