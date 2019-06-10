@@ -20,7 +20,7 @@
       "homepage": "https://github.com/tmtbe"
     }
   ],
-  "name": "esd/consul-plugin",
+  "name": "esd-cloud/consul-plugin",
   "type": "library",
   "keywords": ["server", "swoole"],
   "description": "consul-plugin",
