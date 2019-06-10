@@ -9,7 +9,9 @@
 namespace ESD\Plugins\Consul;
 
 use ESD\Plugins\Consul\Beans\ConsulServiceInfo;
+use ESD\Plugins\Consul\Config\ConsulConfig;
 use ESD\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
+use ESD\Plugins\Consul\Event\ConsulOneServiceChangeEvent;
 use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
 use ESD\Server\Co\Server;
 
@@ -28,27 +30,24 @@ class Services
     /**
      * 服务变更
      * @param ConsulServiceChangeEvent $consulServiceChangeEvent
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
     public static function modifyServices(ConsulServiceChangeEvent $consulServiceChangeEvent)
     {
         self::$services[$consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName()]
             = $consulServiceChangeEvent->getConsulServiceListInfo()->getConsulServiceInfos();
         //同时本进程触发更为细化的携带服务名的ConsulServiceChangeEvent事件
-        $consulServiceChangeEvent->setType(
-            ConsulServiceChangeEvent::ConsulServiceChangeEvent . "::" . $consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName());
-        Server::$instance->getEventDispatcher()->dispatchEvent($consulServiceChangeEvent);
+        $consulOneServiceChangeEvent = new ConsulOneServiceChangeEvent($consulServiceChangeEvent->getConsulServiceListInfo()->getServiceName(),
+            $consulServiceChangeEvent->getConsulServiceListInfo()
+        );
+        Server::$instance->getEventDispatcher()->dispatchEvent($consulOneServiceChangeEvent);
     }
 
     /**
      * 获取服务
      * @param string $service
      * @return ConsulServiceInfo[]
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
-    public static function getServices(string $service): array
+    public static function getServices(string $service): ?array
     {
         $consulServiceInfos = self::$services[$service] ?? null;
         //为null只有二种情况，一是第一次获取，二是reload后进程数据丢失，这时重新获取
@@ -57,32 +56,30 @@ class Services
                 new ConsulAddServiceMonitorEvent($service),
                 Server::$instance->getProcessManager()->getProcessFromName(ConsulPlugin::processName)
             );
-            $call = Server::$instance->getEventDispatcher()->listen(ConsulServiceChangeEvent::ConsulServiceChangeEvent . "::" . $service, null, true);
+            $call = Server::$instance->getEventDispatcher()->listen(ConsulOneServiceChangeEvent::ConsulOneServiceChangeEvent . "::" . $service, null, true);
+            /** @var ConsulOneServiceChangeEvent $consulGetServiceEvent */
             $consulGetServiceEvent = $call->wait();
-            if ($consulGetServiceEvent instanceof ConsulServiceChangeEvent) {
-                $consulServiceInfos = $consulGetServiceEvent->getConsulServiceListInfo()->getConsulServiceInfos();
-            }
+            $consulServiceInfos = $consulGetServiceEvent->getConsulServiceListInfo()->getConsulServiceInfos();
         }
-        $consulPlugin = Server::$instance->getPlugManager()->getPlug(ConsulPlugin::class);
-        if ($consulPlugin instanceof ConsulPlugin) {
-            $consulConfig = $consulPlugin->getConsulConfig();
-            $serverListQueryTags = $consulConfig->getServerListQueryTags();
-            $tag = null;
-            if ($serverListQueryTags != null) {
-                $tag = $serverListQueryTags[$service] ?? $consulConfig->getDefaultQueryTag();
-            }
-            if ($tag != null) {
-                foreach ($consulServiceInfos as $key => $value) {
-                    if (empty($value->getServiceTags())) {
+        /** @var ConsulConfig $consulConfig */
+        $consulConfig = DIGet(ConsulConfig::class);
+        $serverListQueryTags = $consulConfig->getServerListQueryTags();
+        $tag = null;
+        if ($serverListQueryTags != null) {
+            $tag = $serverListQueryTags[$service] ?? $consulConfig->getDefaultQueryTag();
+        }
+        if ($tag != null) {
+            foreach ($consulServiceInfos as $key => $value) {
+                if (empty($value->getServiceTags())) {
+                    unset($consulServiceInfos[$key]);
+                } else {
+                    if (!in_array($tag, $value->getServiceTags())) {
                         unset($consulServiceInfos[$key]);
-                    } else {
-                        if (!in_array($tag, $value->getServiceTags())) {
-                            unset($consulServiceInfos[$key]);
-                        }
                     }
                 }
             }
         }
+
         return $consulServiceInfos;
     }
 }

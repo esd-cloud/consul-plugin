@@ -6,5 +6,7 @@ esd:
       port: 8080
       sock_type: 1
       open_http_protocol: true
+      port_class: ESD\Plugins\Consul\ExampleClass\ConsulPort
 consul:
-  host: 'http://192.168.1.200:8500'
+  host: http://192.168.1.200:8500
+  leader_name: test

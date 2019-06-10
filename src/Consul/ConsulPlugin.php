@@ -40,8 +40,6 @@ class ConsulPlugin extends AbstractPlugin
      * ConsulPlugin constructor.
      * @param ConsulConfig $consulConfig
      * @throws \ReflectionException
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
     public function __construct(ConsulConfig $consulConfig = null)
     {
@@ -57,8 +55,6 @@ class ConsulPlugin extends AbstractPlugin
     /**
      * @param PluginInterfaceManager $pluginInterfaceManager
      * @return mixed|void
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      * @throws \ESD\Core\Exception
      */
     public function onAdded(PluginInterfaceManager $pluginInterfaceManager)
@@ -100,8 +96,6 @@ class ConsulPlugin extends AbstractPlugin
     /**
      * 在进程启动前
      * @param Context $context
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
     public function beforeProcessStart(Context $context)
     {

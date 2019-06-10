@@ -92,8 +92,6 @@ class Consul
     /**
      * Consul constructor.
      * @param ConsulConfig $consulConfig
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
     public function __construct(ConsulConfig $consulConfig)
     {
@@ -252,8 +250,6 @@ class Consul
 
     /**
      * @param bool $isLeader
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
     public function setIsLeader(bool $isLeader): void
     {
@@ -270,8 +266,6 @@ class Consul
     /**
      * 释放Leader
      * @param bool $useAsync
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
     public function releaseLeader($useAsync = true)
     {
@@ -291,8 +285,6 @@ class Consul
     /**
      * 注销服务
      * @param bool $useAsync
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
      */
     public function deregisterService($useAsync = true)
     {
