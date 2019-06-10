@@ -14,6 +14,7 @@ use ESD\Plugins\Consul\Config\ConsulConfig;
 use ESD\Plugins\Consul\Event\ConsulAddServiceMonitorEvent;
 use ESD\Plugins\Consul\Event\ConsulOneServiceChangeEvent;
 use ESD\Plugins\Consul\Event\ConsulServiceChangeEvent;
+use ESD\Psr\Cloud\ServiceInfo;
 use ESD\Psr\Cloud\ServiceInfoList;
 use ESD\Psr\Cloud\Services;
 use ESD\Server\Co\Server;
@@ -91,5 +92,12 @@ class ConsulServices implements Services
         }
         $serviceInfoList = new ConsulServiceListInfo($service, $consulServiceInfos);
         return $serviceInfoList;
+    }
+
+    public function getService(string $service): ?ServiceInfo
+    {
+        $result = $this->getServices($service);
+        if ($result == null || empty($result->getServiceInfos())) return null;
+        return $result->getServiceInfos()[array_rand($result->getServiceInfos())];
     }
 }
