@@ -128,7 +128,11 @@ class ConsulConfig extends BaseConfig
                 $consulCheckConfig->setStatus("passing");
                 $consulServiceConfig->setCheckConfig($consulCheckConfig);
                 if ($portConfig->isOpenHttpProtocol() || $portConfig->isOpenWebsocketProtocol()) {
-                    $consulCheckConfig->setHttp("$agreement://$ip:{$portConfig->getPort()}/actuator/health");
+                    if ($portConfig->isEnableSsl()) {
+                        $consulCheckConfig->setHttp("https://$ip:{$portConfig->getPort()}/actuator/health");
+                    } else {
+                        $consulCheckConfig->setHttp("http://$ip:{$portConfig->getPort()}/actuator/health");
+                    }
                     $this->addServiceConfig($consulServiceConfig);
                 } elseif ($agreement == "tcp") {
                     $consulCheckConfig = new ConsulCheckConfig();
@@ -167,7 +171,7 @@ class ConsulConfig extends BaseConfig
     public function addServiceConfig(ConsulServiceConfig $consulServiceConfig)
     {
         if ($this->serviceConfigs == null) $this->serviceConfigs = [];
-        $this->serviceConfigs[$consulServiceConfig->getName()] = $consulServiceConfig;
+        $this->serviceConfigs[$consulServiceConfig->getId()] = $consulServiceConfig;
     }
 
     /**
